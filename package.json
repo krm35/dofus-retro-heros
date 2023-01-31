@@ -1,0 +1,8 @@
+{
+  "name": "dofus-retro-heros",
+  "version": "1.0.0",
+  "dependencies": {
+    "node-machine-id": "^1.1.12",
+    "ws": "^8.12.0"
+  }
+}

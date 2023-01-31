@@ -1,0 +1,181 @@
+﻿<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';">
+    <title>Dofus Retro</title>
+    <style>
+        body {
+            overflow: hidden;
+        }
+
+        *:focus {
+            outline: none;
+        }
+    </style>
+    <link rel="stylesheet" href="css/w3.css">
+</head>
+
+<body onkeydown="showNextAccount(event)" marginwidth="0" marginHeight="0" topmargin="0" leftmargin="0" scroll="no"
+      bgcolor="#000000">
+<div id="accounts" style="color:white; height: 40px; display:flex">
+    <button class="w3-button" onclick="settingsPrinted=!settingsPrinted; settings()" style='font-size:20px;'>&#9881;
+    </button>
+    <div class="w3-dropdown-hover">
+        <button class="w3-button">Accounts</button>
+        <div id="dropdown" class="w3-dropdown-content w3-bar-block w3-border">
+            <a href="#" class="w3-bar-item w3-button" onclick="connectAll()">Connect all</a>
+        </div>
+    </div>
+</div>
+
+<!--<webview src="D1ElectronLauncher.html"  style="width:100%; height:100vh" nodeintegration nodeintegrationinsubframes plugins></webview>-->
+
+<script type="text/javascript">
+    // require("electron").remote.BrowserWindow.getFocusedWindow().webContents.toggleDevTools();
+
+    let accounts;
+
+    const ws = new WebSocket('ws://localhost:8080');
+
+    ws.onerror = () => console.error;
+
+    ws.onopen = () => ws.send('start');
+
+    ws.onmessage = (e) => {
+        try {
+            accounts = JSON.parse(e.data);
+            console.log(accounts);
+            const dropdown = document.getElementById("dropdown");
+            for (let account in accounts) {
+                dropdown.innerHTML += '<a id="login' + account + '" href="#" onclick="connectAccount(\'' + account + '\')" class="w3-bar-item w3-button">' + account + '</a>';
+            }
+        } catch (e) {
+
+        }
+    };
+
+    async function connectAccount(account) {
+        if (accounts[account].connected) return;
+        accounts[account].connected = true;
+
+        // document.body.innerHTML += '<webview class="webview" id="' + account + '" src="D1ElectronLauncher.html" style="width:100%; height:calc(100vh - 40px)" nodeintegration nodeintegrationinsubframes plugins></webview>';
+        // const webview = document.getElementById(account);
+
+        const webview = document.createElement("webview");
+        webview.className = "webview";
+        webview.id = account;
+        webview.src = "D1ElectronLauncher.html";
+        webview.style.width = "100%";
+        webview.style.height = "calc(100vh - 40px)";
+        webview.nodeintegration = true;
+        webview.nodeintegrationinsubframes = true;
+        webview.plugins = true;
+        document.body.appendChild(webview);
+
+        // webview.addEventListener('console-message', (e) => console.log(account, 'page logged a message:', e.message));
+
+        webview.addEventListener('page-title-updated', (event) => {
+            const [title] = event.title.split('|');
+            if (accounts[title]) showNextAccount(true)
+        });
+
+        webview.addEventListener('dom-ready', async () => {
+            console.log('dom-ready', accounts[account]);
+            // webview.openDevTools();
+            webview.executeJavaScript("process.env.ZAAP_HASH='" + accounts[account].key + "';");
+            webview.executeJavaScript("window.getZaapHash = function(){ return process.env.ZAAP_HASH; }");
+            webview.executeJavaScript("document.getElementById('flashGame').onkeydown=function(e){if (e.key !== 'Tab') return;console.log('test');window.changeTitle('" + account + "'+'|'+Date.now())}");
+        });
+
+        document.getElementById("accounts").innerHTML += '<div class="w3-border" id="settings' + account + '">' +
+            '<button onClick="permute(\'' + account + '\', -1)" class="settings w3-btn">-</button>' +
+            '<button onclick="hideCurrentAccount(); showAccount(\'' + account + '\');" class="w3-button account">' + account + '</button>' +
+            '<button onclick="logout(\'' + account + '\')" class="settings w3-button">x</button> ' +
+            '<button onClick="permute(\'' + account + '\', 1)" class="settings w3-button">+</button>' +
+            '</div>'
+        ;
+
+        hideCurrentAccount();
+        window.currentAccount = account;
+        settings();
+    }
+
+    let settingsPrinted;
+
+    function settings() {
+        const elements = document.getElementsByClassName("settings");
+        for (let i = 0; i < elements.length; i++) elements[i].style.display = (!settingsPrinted ? "none" : "");
+    }
+
+    function connectAll() {
+        for (let account in accounts) connectAccount(account);
+    }
+
+    function hideCurrentAccount() {
+        if (!window.currentAccount) return;
+        document.getElementById("settings" + window.currentAccount).classList.remove("w3-border");
+        document.getElementById(window.currentAccount).style.display = "none";
+    }
+
+    function showAccount(account) {
+        document.getElementById("settings" + account).classList.add("w3-border");
+        document.getElementById(account).style.display = "";
+        window.currentAccount = account;
+    }
+
+    function logout(account) {
+        delete accounts[account].connected;
+        if (window.currentAccount === account) {
+            hideCurrentAccount();
+            for (let a in accounts) {
+                if (accounts[a].connected) {
+                    showAccount(a);
+                    break;
+                }
+            }
+            delete window.currentAccount;
+        }
+        document.getElementById(account).remove();
+        document.getElementById("settings" + account).remove();
+    }
+
+    function permute(account, next) {
+        const accounts = document.getElementsByClassName("account");
+        for (let i = 0; i < accounts.length; i++) {
+            if (accounts[i].innerText === account) {
+                permuteAccount(accounts[i], accounts[i + next]);
+                return;
+            }
+        }
+    }
+
+    function permuteAccount(account, adj) {
+        if (!adj) return;
+        const temp = account.innerText;
+        account.innerText = adj.innerText;
+        adj.onclick = () => {
+            hideCurrentAccount();
+            showAccount(account.innerText);
+        };
+        account.onclick = () => {
+            hideCurrentAccount();
+            showAccount(adj.innerText);
+        };
+        adj.innerText = temp;
+    }
+
+    function showNextAccount(e) {
+        if (e !== true && e.key !== "Tab") return;
+        const webviews = document.getElementsByClassName("webview");
+        for (let i = 0; i < webviews.length; i++) {
+            if (webviews[i].id === window.currentAccount) {
+                hideCurrentAccount();
+                showAccount((webviews[i + 1] || webviews[0]).id);
+                return;
+            }
+        }
+    }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+- The electron chat doesn't load, maybe nodeintegrationinsubframes which is experimental doesn't work properly on electron 11.5.0, need to upgrade?
+- Better user interface
