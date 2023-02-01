@@ -1,6 +1,5 @@
 const fs = require('fs'),
     http = require('http'),
-    WebSocket = require('ws'),
     {spawn} = require('child_process'),
     {username} = require('os').userInfo(),
     accounts = require('./accounts'),
@@ -23,6 +22,7 @@ const dofus = spawn(program[0] + "Dofus Retro.exe", [], {
         ZAAP_CAN_AUTH: true,
         ZAAP_GAME: "retro",
         ZAAP_HASH: "",
+        ZAAP_HEROES: JSON.stringify(accounts),
         ZAAP_INSTANCE_ID: "1",
         ZAAP_LOGS_PATH: "C:\\Users\\" + username + "\\AppData\\Roaming\\zaap\\retro",
         ZAAP_PORT: "26117",
@@ -38,29 +38,20 @@ dofus.on('exit', () => {
 if (debug) require('./debug')(dofus.pid);
 else require('./launcher');
 
-const server = http.createServer(function (req, res) {
-    res['end']();
+http.createServer(function (req, res) {
+    if (router[req.url]) res['end'](router[req.url]());
+    else res['end']();
 }).listen(8080);
-
-server.on('upgrade', function upgrade(request, socket, head) {
-    wss['handleUpgrade'](request, socket, head, function done(ws) {
-        wss['emit']('connection', ws, request);
-    });
-});
-
-const wss = new WebSocket.Server({noServer: true});
-
-wss['on']('connection', function connection(ws) {
-    ws.on('message', function message(message) {
-        ws.send(JSON.stringify(router[message]()));
-    });
-});
 
 const router = {};
 
-router['start'] = () => {
+router['/start'] = () => {
     replaceFiles();
-    return accounts;
+    return JSON.stringify(accounts);
+};
+
+router['/electron-tabs.js'] = () => {
+    return fs.readFileSync("./electron-tabs.js");
 };
 
 function replaceFiles() {

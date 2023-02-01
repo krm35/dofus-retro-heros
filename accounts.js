@@ -52,12 +52,12 @@ function createHashFromString(string) {
 }
 
 const uuid = [os.platform(), os.arch(), machineIdSync(), os.cpus().length, os.cpus()[0].model].join();
-const path = "C:\\Users\\" + require('os').userInfo().username + "\\AppData\\Roaming\\zaap\\keydata\\";
+const path = "C:\\Users\\" + os.userInfo().username + "\\AppData\\Roaming\\zaap\\keydata\\";
 const {hm1} = createHmEncoders();
 
 fs.readdirSync(path).filter(file => file.includes("keydata")).forEach(file => {
     const decrypted = decrypt(fs.readFileSync(path + file).toString());
-    let {login} = decrypted;
+    const {login} = decrypted;
     accounts[login] = decrypted;
     accounts[login]['login'] = login;
     accounts[login]['hm1'] = hm1;
