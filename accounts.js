@@ -52,7 +52,8 @@ function createHashFromString(string) {
 }
 
 const uuid = [os.platform(), os.arch(), machineIdSync(), os.cpus().length, os.cpus()[0].model].join();
-const path = "C:\\Users\\" + os.userInfo().username + "\\AppData\\Roaming\\zaap\\keydata\\";
+const path = process.platform === "win32" ? "C:\\Users\\" + os.userInfo().username + "\\AppData\\Roaming\\zaap\\keydata\\"
+    : "/home/" + os.userInfo().username + "/.config/zaap/keydata/";
 const {hm1} = createHmEncoders();
 
 fs.readdirSync(path).filter(file => file.includes("keydata")).forEach(file => {

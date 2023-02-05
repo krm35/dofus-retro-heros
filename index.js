@@ -3,30 +3,39 @@ const fs = require('fs'),
     {spawn} = require('child_process'),
     {username} = require('os').userInfo(),
     accounts = require('./accounts'),
+    windows = process.platform === "win32",
     debug = process.argv.includes("--debug");
 
 process.on('uncaughtException', function (err) {
     console.log('uncaughtException', err);
 });
 
-const path = JSON.parse("" + fs.readFileSync("C:\\Users\\" + username + "\\AppData\\Roaming\\zaap\\repositories\\production\\retro\\main\\release.json"))['location'] + "\\";
+const osPath = windows ? "C:/Users/" + username + "/AppData/" : "/home/" + username + "/.config/";
+
+const path = JSON.parse("" + fs.readFileSync(osPath + "zaap/repositories/production/retro/main/release.json"))['location'] + "/";
 let program = [path];
-if (debug) program = ["C:\\Users\\" + username + "\\Desktop\\Retro\\"];
-const retroClientPath = program[0] + "resources\\app\\retroclient\\";
+if (debug) program = ["C:/Users/" + username + "/Desktop/Retro/"];
+const retroClientPath = program[0] + "resources/app/retroclient/";
 fs.copyFileSync(retroClientPath + "D1ElectronLauncher.html", retroClientPath + "temp.html");
 fs.copyFileSync("./D1ElectronLauncher.html", retroClientPath + "D1ElectronLauncher.html");
 
 // noinspection JSCheckFunctionSignatures
-const dofus = spawn(program[0] + "Dofus Retro.exe", [], {
+const dofus = spawn(program[0] + (windows ? "Dofus Retro.exe" : "dofus1electron"), [], {
     env: {
-        ZAAP_CAN_AUTH: true,
-        ZAAP_GAME: "retro",
-        ZAAP_HASH: "",
         ZAAP_HEROES: JSON.stringify(accounts),
-        ZAAP_INSTANCE_ID: "1",
-        ZAAP_LOGS_PATH: "C:\\Users\\" + username + "\\AppData\\Roaming\\zaap\\retro",
-        ZAAP_PORT: "26117",
-        ZAAP_RELEASE: "main"
+        ...(windows ?
+                {
+                    ZAAP_CAN_AUTH: true,
+                    ZAAP_GAME: "retro",
+                    ZAAP_HASH: "",
+                    ZAAP_INSTANCE_ID: "1",
+                    ZAAP_LOGS_PATH: "C:/Users/" + username + "/AppData/Roaming/zaap/retro",
+                    ZAAP_PORT: "26117",
+                    ZAAP_RELEASE: "main"
+                } :
+                process.env
+        )
+
     }
 });
 
