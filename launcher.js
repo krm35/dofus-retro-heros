@@ -10,7 +10,6 @@ server.on('connection', function (socket) {
     socket.on('data', function (data) {
         try {
             const str = data.toString().slice(0, -1);
-            console.log(str);
             if (str.startsWith("connect retro main -1")) {
                 const split = str.split(" ");
                 uuid = split[split.length - 1];
@@ -62,8 +61,6 @@ async function getGameToken(account, socket, game) {
         method: 'GET',
         headers: {APIKEY}
     });
-
-    console.log(json);
 
     socket.write("auth_getGameToken " + json[1]['token'] + "\x00");
 }
