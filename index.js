@@ -1,5 +1,6 @@
 const fs = require('fs'),
     http = require('http'),
+    path = require('path'),
     {spawn} = require('child_process'),
     {username} = require('os').userInfo(),
     accounts = require('./accounts'),
@@ -10,17 +11,17 @@ process.on('uncaughtException', function (err) {
     console.log('uncaughtException', err);
 });
 
-const osPath = windows ? "C:/Users/" + username + "/AppData/" : "/home/" + username + "/.config/";
-
-const path = JSON.parse("" + fs.readFileSync(osPath + "zaap/repositories/production/retro/main/release.json"))['location'] + "/";
-let program = [path];
-if (debug) program = ["C:/Users/" + username + "/Desktop/Retro/"];
-const retroClientPath = program[0] + "resources/app/retroclient/";
-fs.copyFileSync(retroClientPath + "D1ElectronLauncher.html", retroClientPath + "temp.html");
-fs.copyFileSync("./D1ElectronLauncher.html", retroClientPath + "D1ElectronLauncher.html");
+const osPath = windows ? path.join("C:", "Users", username, 'AppData', 'Roaming') : path.join("home", username, '.config');
+let program = [JSON.parse("" + fs.readFileSync(path.join(osPath, "zaap", "repositories", "production", "retro", "main", "release.json")))['location']];
+if (debug) program = ["C:\\Users\\" + username + "\\Desktop\\Retro\\"];
+const retroClientPath = path.join(program[0], "resources", "app", "retroclient");
+const tempFile = path.join(retroClientPath, "temp.html");
+const D1ElectronLauncherFile = path.join(retroClientPath, "D1ElectronLauncher.html");
+fs.copyFileSync(D1ElectronLauncherFile, tempFile);
+fs.copyFileSync("./D1ElectronLauncher.html", D1ElectronLauncherFile);
 
 // noinspection JSCheckFunctionSignatures
-const dofus = spawn(program[0] + (windows ? "Dofus Retro.exe" : "dofus1electron"), [], {
+const dofus = spawn(path.join(program[0], (windows ? "Dofus Retro.exe" : "dofus1electron")), [], {
     env: {
         ZAAP_HEROES: JSON.stringify(accounts),
         ...(windows ?
@@ -29,7 +30,7 @@ const dofus = spawn(program[0] + (windows ? "Dofus Retro.exe" : "dofus1electron"
                     ZAAP_GAME: "retro",
                     ZAAP_HASH: "",
                     ZAAP_INSTANCE_ID: "1",
-                    ZAAP_LOGS_PATH: "C:/Users/" + username + "/AppData/Roaming/zaap/retro",
+                    ZAAP_LOGS_PATH: "C:\\Users\\" + username + "\\AppData\\Roaming\\zaap\\retro",
                     ZAAP_PORT: "26117",
                     ZAAP_RELEASE: "main"
                 } :
@@ -64,8 +65,8 @@ router['/electron-tabs.js'] = () => {
 };
 
 function replaceFiles() {
-    if (fs.existsSync(retroClientPath + "temp.html")) {
-        fs.copyFileSync(retroClientPath + "temp.html", retroClientPath + "D1ElectronLauncher.html");
-        fs.unlinkSync(retroClientPath + "temp.html");
+    if (fs.existsSync(tempFile)) {
+        fs.copyFileSync(tempFile, D1ElectronLauncherFile);
+        fs.unlinkSync(tempFile);
     }
 }

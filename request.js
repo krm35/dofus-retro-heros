@@ -7,7 +7,7 @@ module.exports = function request(options, body) {
         'accept-encoding': 'gzip,deflate',
         'accept-language': 'fr',
         'connection': 'close',
-        'user-agent': 'Zaap ',
+        'user-agent': 'Zaap 3.9.0',
         ...(options.headers || {})
     };
 
