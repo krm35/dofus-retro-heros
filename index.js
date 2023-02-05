@@ -1,17 +1,20 @@
 const fs = require('fs'),
     http = require('http'),
     path = require('path'),
+    os = require('os'),
     {spawn} = require('child_process'),
-    {username} = require('os').userInfo(),
+    {username} = os.userInfo(),
     accounts = require('./accounts'),
     windows = process.platform === "win32",
+    linux = process.platform === "linux",
     debug = process.argv.includes("--debug");
 
 process.on('uncaughtException', function (err) {
     console.log('uncaughtException', err);
 });
 
-const osPath = windows ? path.join("C:", "Users", username, 'AppData', 'Roaming') : path.join("home", username, '.config');
+const osPath = windows ? path.join("C:", "Users", username, 'AppData', 'Roaming')
+    : linux ? path.join(os.homedir(), '.config') : path.join(os.homedir(), "Library", "Application Support");
 let program = [JSON.parse("" + fs.readFileSync(path.join(osPath, "zaap", "repositories", "production", "retro", "main", "release.json")))['location']];
 if (debug) program = ["C:\\Users\\" + username + "\\Desktop\\Retro\\"];
 const retroClientPath = path.join(program[0], "resources", "app", "retroclient");
@@ -21,7 +24,7 @@ fs.copyFileSync(D1ElectronLauncherFile, tempFile);
 fs.copyFileSync("./D1ElectronLauncher.html", D1ElectronLauncherFile);
 
 // noinspection JSCheckFunctionSignatures
-const dofus = spawn(path.join(program[0], (windows ? "Dofus Retro.exe" : "dofus1electron")), [], {
+const dofus = spawn(path.join(program[0], (linux ? "dofus1electron" : "Dofus Retro.exe")), [], {
     env: {
         ZAAP_HEROES: JSON.stringify(accounts),
         ...(windows ?

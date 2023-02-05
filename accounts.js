@@ -1,6 +1,7 @@
 const fs = require('fs'),
     os = require('os'),
     crypto = require('crypto'),
+    path = require('path'),
     {machineIdSync} = require('node-machine-id'),
     accounts = {};
 
@@ -52,12 +53,17 @@ function createHashFromString(string) {
 }
 
 const uuid = [os.platform(), os.arch(), machineIdSync(), os.cpus().length, os.cpus()[0].model].join();
-const path = process.platform === "win32" ? "C:\\Users\\" + os.userInfo().username + "\\AppData\\Roaming\\zaap\\keydata\\"
-    : "/home/" + os.userInfo().username + "/.config/zaap/keydata/";
+const keyDataPath =
+    process.platform === "win32" ? "C:\\Users\\" + os.userInfo().username + "\\AppData\\Roaming\\zaap\\keydata\\"
+        :
+        process.platform === "linux" ? os.homedir() + "/.config/zaap/keydata/"
+            :
+            path.join(os.homedir(), "Library", "Application Support", "zaap", "keydata");
+
 const {hm1} = createHmEncoders();
 
-fs.readdirSync(path).filter(file => file.includes("keydata")).forEach(file => {
-    const decrypted = decrypt(fs.readFileSync(path + file).toString());
+fs.readdirSync(keyDataPath).filter(file => file.includes("keydata")).forEach(file => {
+    const decrypted = decrypt(fs.readFileSync(keyDataPath + file).toString());
     const {login} = decrypted;
     accounts[login] = decrypted;
     accounts[login]['login'] = login;
