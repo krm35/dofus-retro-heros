@@ -7,7 +7,7 @@ module.exports = function request(options, body) {
         'accept-encoding': 'gzip,deflate',
         'accept-language': 'fr',
         'connection': 'close',
-        'user-agent': 'Zaap 3.9.0',
+        'user-agent': 'Zaap 3.9.6',
         ...(options.headers || {})
     };
 
@@ -55,7 +55,7 @@ module.exports = function request(options, body) {
                 })
             }
         }).on('error', (err) => {
-            resolve([true, "error"]);
+            resolve([true, "error " + err]);
         });
         if (body) req.write(body);
         req.end();

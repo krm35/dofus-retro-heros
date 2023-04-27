@@ -42,7 +42,7 @@ function generateHashFromCertif(hm1, hm2, certif) {
 async function getGameToken(account, socket, game) {
     const queryPath = {game, certificate_id: "", certificate_hash: ""};
     socket['accountLogin'] = account['login'];
-    if (account['certificat']) {
+    if (account['certificate']) {
         queryPath['certificate_id'] = account['certificat']['id'];
         queryPath['certificate_hash'] = generateHashFromCertif(account['hm1'], account['hm2'], account['certificat']);
     }
