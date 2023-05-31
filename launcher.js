@@ -43,8 +43,8 @@ async function getGameToken(account, socket, game) {
     const queryPath = {game, certificate_id: "", certificate_hash: ""};
     socket['accountLogin'] = account['login'];
     if (account['certificate']) {
-        queryPath['certificate_id'] = account['certificat']['id'];
-        queryPath['certificate_hash'] = generateHashFromCertif(account['hm1'], account['hm2'], account['certificat']);
+        queryPath['certificate_id'] = account['certificate']['id'];
+        queryPath['certificate_hash'] = generateHashFromCertif(account['hm1'], account['hm2'], account['certificate']);
     }
     const APIKEY = account['key'];
 
